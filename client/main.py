@@ -1,25 +1,50 @@
 import requests
+import pytube
+import os
 
 apikey="AIzaSyA5FU-2tG-eOvIOFccXYap5C-pPZ3zaEzM"
 pid="PLw-VjHDlEOgvtnnnqWlTqByAtC7tXBg6D"
 
-videoIDs = []
+def getIDs():
+    videoIDs = {}
 
-nextToken = ""
+    nextToken = ""
 
-while 1==1:
-    URL = "https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50" + "&playlistId=" + pid + "&key=" + apikey + "&pageToken=" + nextToken
-    response = requests.get(URL)
-    res = response.json()
-    
-    for vid in res["items"]:
-        videoIDs.append(vid["contentDetails"]["videoId"])
-        print(vid["contentDetails"]["videoId"])
+    cc = 0
 
-    try:
-        nextToken = res["nextPageToken"]
-    except:
-        print("fertig")
-        break
+    while 1==1:
+        URL = "https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails,snippet&maxResults=50" + "&playlistId=" + pid + "&key=" + apikey + "&pageToken=" + nextToken
+        response = requests.get(URL)
+        res = response.json()
+        
+        for vid in res["items"]:
+            id = vid["contentDetails"]["videoId"]
+            title = vid["snippet"]["title"]
+            videoIDs[cc] = [id, title]
+            cc+=1
+            #print(vid["contentDetails"]["videoId"] + "," + vid["snippet"]["title"])
 
-print(len(videoIDs))
+        try:
+            nextToken = res["nextPageToken"]
+        except:
+            print("got all ids from api")
+            break
+    return videoIDs
+
+def getPathIds(path):
+    already = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".mp3"):
+                already.append(file.split('.mp3')[0])
+    return already
+
+def main():
+    videoIDs = getIDs()
+    print(videoIDs)
+    #print(len(videoIDs))
+    already = getPathIds('.')
+    print(already)
+
+if __name__ == '__main__':
+    main()
