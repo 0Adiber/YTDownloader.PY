@@ -3,9 +3,9 @@ import pytube
 import os
 
 apikey="AIzaSyA5FU-2tG-eOvIOFccXYap5C-pPZ3zaEzM"
-pid="PLw-VjHDlEOgvtnnnqWlTqByAtC7tXBg6D"
+pid="PLlwwMhdhODxPng2qnz5QziPfCbIq8j722"
 
-def getIDs():
+def getPlaylistIDs():
     videoIDs = {}
 
     nextToken = ""
@@ -27,24 +27,51 @@ def getIDs():
         try:
             nextToken = res["nextPageToken"]
         except:
-            print("got all ids from api")
+            print("Got all Ids from Playlist")
             break
     return videoIDs
 
-def getPathIds(path):
+def getFilesOf(path,ending):
     already = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith(".mp3"):
-                already.append(file.split('.mp3')[0])
+            if file.endswith("."+ending):
+                already.append(file.split("."+ending)[0])
     return already
 
+def removeDuplicates(videoIDs, already):
+    finalList = videoIDs.copy()
+    
+    for key,value in videoIDs.items():
+        for item in value:
+            if item in already:
+                del finalList[key]
+
+    return finalList
+
+def downloadMusic(videoIDs, path):
+    os.makedirs(path+"/temp", exist_ok=True)
+    for key,value in videoIDs.items():
+        yt = pytube.YouTube("https://www.youtube.com/watch?v=" + value[0])
+        yt.streams.first().download(path+"/temp", yt.streams.first().default_filename.replace(" ", "_"))
+    print("Downloaded all Videos")
+    
+    downloads = getFilesOf(path+"/temp","mp4")
+    print(downloads)
+    for item in downloads:
+        cmd = "ffmpeg -i " + path+"\\temp\\"+item + ".mp4 " + path+"\\temp\\"+item + ".mp3"
+        os.system(cmd)
+        os.remove(path+"/temp/"+item+".mp4")
+    print("Converted all Videos")
+
+    
+
 def main():
-    videoIDs = getIDs()
-    print(videoIDs)
-    #print(len(videoIDs))
-    already = getPathIds('.')
-    print(already)
+    videoIDs = getPlaylistIDs()
+    already = getFilesOf('.', "mp3")
+    videoIDs = removeDuplicates(videoIDs, already)
+    downloadMusic(videoIDs, "Z:\Adrian\Programmieren\YTDownloader\client")
+
 
 if __name__ == '__main__':
-    main()
+    main()  
