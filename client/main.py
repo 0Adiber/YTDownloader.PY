@@ -50,19 +50,22 @@ def removeDuplicates(videoIDs, already):
     return finalList
 
 def downloadMusic(videoIDs, path):
-    os.makedirs(path+"/temp", exist_ok=True)
+    os.makedirs(path+"/download/temp", exist_ok=True)
     for key,value in videoIDs.items():
         yt = pytube.YouTube("https://www.youtube.com/watch?v=" + value[0])
-        yt.streams.first().download(path+"/temp", yt.streams.first().default_filename.replace(" ", "_"))
+        yt.streams.first().download(path+"/download/temp", yt.streams.first().default_filename.replace(" ", "_"))
     print("Downloaded all Videos")
     
-    downloads = getFilesOf(path+"/temp","mp4")
+    downloads = getFilesOf(path+"/download/temp","mp4")
     print(downloads)
+	
+    os.makedirs(path+"/download/Music", exist_ok=True)
+	
     for item in downloads:
-        cmd = "ffmpeg -i " + path+"\\temp\\"+item + ".mp4 " + path+"\\temp\\"+item + ".mp3"
+        cmd = "ffmpeg -i " + path+"\\download\\temp\\"+item + ".mp4 " + path+"\\download\\Music\\"+item + ".mp3"
         os.system(cmd)
-        os.remove(path+"/temp/"+item+".mp4")
-    print("Converted all Videos")
+        os.remove(path+"/download/temp/"+item+".mp4")
+    print("Converted and Deleted all Videos")
 
     
 
@@ -70,7 +73,7 @@ def main():
     videoIDs = getPlaylistIDs()
     already = getFilesOf('.', "mp3")
     videoIDs = removeDuplicates(videoIDs, already)
-    downloadMusic(videoIDs, "Z:\Adrian\Programmieren\YTDownloader\client")
+    downloadMusic(videoIDs, "E:\Adrian\Programmieren\Web\YTDownloader\client")
 
 
 if __name__ == '__main__':
