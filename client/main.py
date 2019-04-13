@@ -3,8 +3,9 @@ import pytube
 import os
 import sys, getopt
 import datetime
+import json
 
-apikey="AIzaSyA5FU-2tG-eOvIOFccXYap5C-pPZ3zaEzM"
+apikey=""
 
 def getPlaylistIDs(pid):
     videoIDs = {}
@@ -38,6 +39,28 @@ def getPlaylistIDs(pid):
         except:
             print("Got all Ids from Playlist")
             break
+    return videoIDs
+
+def getVideoID(vid):
+    videoIDs = {}
+    #GET https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=Ks-_Mh1QhMc&key=[YOUR_API_KEY] HTTP/1.1
+    URL = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + vid + "&key=" + apikey
+    response = requests.get(URL)
+    res = response.json()
+
+    if(len(res) == 1):
+        res = res["error"]
+        res = res["errors"]
+        res = res[0]
+        print(res["reason"])
+        print("VideoID: " + vid)
+        sys.exit()
+
+    vid = res["items"][0]
+    title = vid["snippet"]["title"]
+    title = title.replace(".", "").replace(",", "").replace(";", "").replace(":", "")
+    videoIDs[0] = [vid, title]
+
     return videoIDs
 
 def getFilesOf(path,ending):
@@ -116,10 +139,23 @@ def downloadVideoList(videoIDs, path, tres):
     print("Moved all Videos to /download/Video/" + newDir + "/")
 
 def useMusic(path, vid):
-    print("1")
+    videoIDs = getVideoID(vid)
+    already = getFilesOf('.', "mp3")
+    videoIDs = removeDuplicates(videoIDs, already)
+    if(len(videoIDs) > 0):
+        print("Download")
+        downloadMusicList(videoIDs, path)
+    else:
+        print("Song already Downloaded")
 
-def useVideo(path, vid):
-    print("2")
+def useVideo(path, vid, res):
+    videoIDs = getVideoID(vid)
+    already = getFilesOf('.', "mp4")
+    videoIDs = removeDuplicates(videoIDs, already)
+    if(len(videoIDs) > 0):
+        downloadVideoList(videoIDs, path, res)
+    else:
+        print("Video already Downloaded")
 
 def useMusicList(path, pid):
     videoIDs = getPlaylistIDs(pid)
@@ -139,7 +175,20 @@ def useVideoList(path, pid, res):
     else:
         print("No new Videos")
 
+def getApiKey():
+    try:
+        with open('config.json') as json_file:
+            data = json.load(json_file)
+            apikey = data['apikey']
+    except json.decoder.JSONDecodeError:
+        print("Configure the config.json properly!\nYou can find an example in the Github Repository")
+        sys.exit()
+    except FileNotFoundError:
+        print("config.json not found!")
+        sys.exit()
+
 def main(argv):
+    apikey = getApiKey()
     path = os.path.abspath(__file__).replace(__file__, "")[:-1]
     try:
         args = argv.split()
@@ -148,7 +197,7 @@ def main(argv):
         print("Try the -h parameter")
         sys.exit(2)
     
-    tid = "You need to specify a Playlist-ID with --id=<pid/vid>"
+    tid = "You need to specify a ID with --id=<pid/vid>"
     tres = "You need to specify a Resolution with --res=<vidRes>"
 
     for opt, arg in opts:
@@ -171,14 +220,19 @@ def main(argv):
     for opt, arg in opts:
         if opt == "-p":
             if(len(opts) != 2):
-                print("Wrong input, try '-h'")
+                print("Wrong input, try '-h' for help")
                 return
             useMusicList(path, tid)
         if opt == "-s":
             if(len(opts) != 3):
-                print("Wrong input, try '-h'")
+                print("Wrong input, try '-h' for help")
                 return
             useVideoList(path, tid, tres)
+        if opt == "-m":
+            if(len(opts) != 2):
+                print("Wrong input, try '-h' for help")
+                return
+            useMusic(path, tid)
     
     sys.exit()
 
