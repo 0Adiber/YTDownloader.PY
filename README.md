@@ -51,3 +51,11 @@ __Main purpose was to download Youtube Playlists and keep your Music Folder up-t
    2. Probably Give it a nice name
    3. At "Key restrictions" choose "API restrictions"
    4. Now choose the Youtube Data API as restriction
+   
+## DEPENDENCIES:
+1. Python 3
+   1. also install pytube
+      1. 'pip install pytube'
+2. FFMPEG
+   1. Have a ffmpeg.(exe) in the folder of the main.py file
+      1. [HERE](https://www.ffmpeg.org/download.html)
