@@ -23,6 +23,7 @@ def getPlaylistIDs(pid):
             res = res["errors"]
             res = res[0]
             print(res["reason"])
+            print("PlaylistID: " + pid)
             sys.exit()
 
         for vid in res["items"]:
@@ -78,11 +79,28 @@ def downloadMusicList(videoIDs, path):
         os.remove(path+"/download/temp/"+item+".mp4")
     print("Converted and Deleted all Videos")
 
-def downloadVideoList(videoIDs, path, res):
+def downloadVideoList(videoIDs, path, tres):
     os.makedirs(path+"/download/temp", exist_ok=True)
+
     for key,value in videoIDs.items():
         yt = pytube.YouTube("https://www.youtube.com/watch?v=" + value[0])
-        yt.streams.first().download(path+"/download/temp", yt.streams.first().default_filename.replace("mp4", "").replace(" ", "\\ "))
+        #yt.streams.first().download(path+"/download/temp", yt.streams.first().default_filename.replace("mp4", "").replace(" ", "\\ "))
+
+        fName = yt.streams.first().default_filename.replace(".mp4", "")
+
+        try:
+            yt.streams.filter(res=tres).first().download(path+"/download/temp", "temp_VID")
+            yt.streams.first().download(path+"/download/temp","temp_AUD")
+
+            cmd = "ffmpeg -i " + "\"" + path + "\\download\\temp\\temp_VID.mp4\" -i \"" + path + "\\download\\temp\\temp_AUD.mp4\" -c copy -map 0:v:0 -map 1:a:0 -shortest \"" + path + "\\download\\temp\\" + fName + ".mp4\"" 
+            os.system(cmd)
+
+            os.remove(path+"/download/temp/temp_VID.mp4")
+            os.remove(path+"/download/temp/temp_AUD.mp4")
+        except:
+            print("Res -> not availbale! : " + tres)
+            yt.streams.first().download(path+"/download/temp", fName.replace(" ", "\\ "))
+
     print("Downloaded all Videos")
     
     downloads = getFilesOf(path+"/download/temp","mp4")
@@ -115,9 +133,9 @@ def useMusicList(path, pid):
 def useVideoList(path, pid, res):
     videoIDs = getPlaylistIDs(pid)
     already = getFilesOf('.', "mp4")
-    videoIDs = removeDuplicates(videoIDs, already, res)
+    videoIDs = removeDuplicates(videoIDs, already)
     if(len(videoIDs) > 0):
-        downloadVideoList(videoIDs, path)
+        downloadVideoList(videoIDs, path, res)
     else:
         print("No new Videos")
 
@@ -125,26 +143,44 @@ def main(argv):
     path = os.path.abspath(__file__).replace(__file__, "")[:-1]
     try:
         args = argv.split()
-        opts, args = getopt.getopt(args, '-s', ['id=','res='])
-        print(opts)
-        print(args)
-        sys.exit(2)
+        opts, args = getopt.getopt(args, 'hpsmv', ['id=', 'res='])
     except getopt.GetoptError:
         print("Try the -h parameter")
         sys.exit(2)
+    
+    tid = "You need to specify a Playlist-ID with --id=<pid/vid>"
+    tres = "You need to specify a Resolution with --res=<vidRes>"
+
     for opt, arg in opts:
         if opt == '-h':
             print("Possible Parameters: \n")
             print("-h : this help page")
-            print("-p : Download a YT-Playlist as mp3s")
-            print("-s : Download a YT-Playlist as mp4s")
-            print("-m : Download one YT-Video as mp3")
-            print("-v : Download one YT-Video as mp4")
+            print("-p --id=<pid>: Download a YT-Playlist as mp3s")
+            print("-s --id=<pid> --res=<vidRes>: Download a YT-Playlist as mp4s with specified video resolution")
+            print("-m --id=<vid>: Download one YT-Video as mp3")
+            print("-v --id=<vid> --res=<vidRes>: Download one YT-Video as mp4 with specified video resolution")
             sys.exit()
-        elif opt in ("-p", "--id"):
-            useMusicList(path, arg)
-        elif opt in ("-s", "--id"):
-            useVideoList(path, arg)
+        elif opt == "--id":
+            tid = arg
+        elif opt == "--res":
+            tres = arg
+
+    if not tres.endswith("p"):
+        tres = tres + "p"
+    
+    for opt, arg in opts:
+        if opt == "-p":
+            if(len(opts) != 2):
+                print("Wrong input, try '-h'")
+                return
+            useMusicList(path, tid)
+        if opt == "-s":
+            if(len(opts) != 3):
+                print("Wrong input, try '-h'")
+                return
+            useVideoList(path, tid, tres)
+    
+    sys.exit()
 
 if __name__ == '__main__':
     param = ""
