@@ -22,6 +22,14 @@ __Main purpose was to download Youtube Playlists and keep your Music Folder up-t
 ## IDs and RESOLUTIONs:
 ### IDs
   __Video or Playlist IDs have to be Public or Unlisted__
+  1. Get Video ID:
+     1. e.g. `https://www.youtube.com/watch?v=PHgc8Q6qTjc`
+     2. Take the strange String after the '?v='
+  2. Get Playlist ID:
+     1. e.g. `https://www.youtube.com/watch?v=Jkyy4JOu9jE&list=PLYH8WvNV1YEn_iiBMZiZ2aWugQfN1qVfM`
+        1. take the strange String after the '&list='
+     2. e.g. `https://www.youtube.com/playlist?list=PLztXDHpdUwySiFjXLKUSX_RIOc207g5LJ`
+        1. take the strange String after the '?list='
 ### RESOLUTIONS
   __Resolutions have to be valid (the ones you can choose on YouTube), otherwise it will just download the first Video Source, which is normally 360p__
 
