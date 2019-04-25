@@ -5,7 +5,7 @@ import sys, getopt
 import datetime
 import json
 
-apikey=""
+apikey=""   
 
 def getPlaylistIDs(pid):
     videoIDs = {}
@@ -179,7 +179,7 @@ def getApiKey():
     try:
         with open('config.json') as json_file:
             data = json.load(json_file)
-            apikey = data['apikey']
+            return data['apikey']
     except json.decoder.JSONDecodeError:
         print("Configure the config.json properly!\nYou can find an example in the Github Repository")
         sys.exit()
@@ -188,6 +188,7 @@ def getApiKey():
         sys.exit()
 
 def main(argv):
+    global apikey
     apikey = getApiKey()
     path = os.path.abspath(__file__).replace(__file__, "")[:-1]
     try:
